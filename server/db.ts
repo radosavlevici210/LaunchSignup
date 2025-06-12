@@ -7,8 +7,12 @@ import * as schema from "../shared/schema";
 const databaseUrl = process.env.DATABASE_URL;
 
 if (!databaseUrl) {
+  console.error("❌ DATABASE_URL environment variable is required");
+  console.error("Please set DATABASE_URL in your environment variables");
   throw new Error("DATABASE_URL environment variable is required");
 }
+
+console.log("✅ Database URL configured successfully");
 
 // Configure connection for production
 const connectionString = databaseUrl;
