@@ -1,0 +1,47 @@
+The Netlify deploy errored, with the following guidance provided:
+
+**Diagnosis:**
+The build failed at the stage of installing dependencies with the following error:
+- `npm error code EEXIST`
+- `npm error errno -17`
+- `npm error EEXIST: file already exists, mkdir '/dev/null'`
+
+**Solution:**
+The error indicates that there is an issue with a temporary file path `/dev/null`. To resolve this, you can try the following:
+1. Clear the npm cache by running `npm cache clean --force` to remove any cached files that might be causing conflicts.
+2. Check for any leftover files in the project directory that might be conflicting with the installation process.
+3. Make sure the Node.js and npm versions are compatible with your project requirements.
+
+If the issue persists, you can:
+- Verify the package causing the conflict is in the `package.json` file or the file was committed to the repository.
+- Consider updating Node.js and npm versions to ensure compatibility with your project. You can refer to the documentation on [changing Node versions](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-and-javascript) for guidance.
+
+The relevant error logs are:
+
+Line 12: Downloading and installing node v18.20.8...
+Line 13: Downloading https://nodejs.org/dist/v18.20.8/node-v18.20.8-linux-x64.tar.xz...
+Line 14: Computing checksum with sha256sum
+Line 15: Checksums matched!
+Line 16: Now using node v18.20.8 (npm v10.8.2)
+Line 17: Enabling Node.js Corepack
+Line 18: Started restoring cached build plugins
+Line 19: Finished restoring cached build plugins
+Line 20: Started restoring cached corepack dependencies
+Line 21: Finished restoring cached corepack dependencies
+Line 22: Failed during stage 'Install dependencies': dependency_installation script returned non-zero exit code: 1
+Line 23: No npm workspaces detected
+Line 24: Started restoring cached node modules
+Line 25: Finished restoring cached node modules
+Line 26: Installing npm packages using npm version 10.8.2
+Line 27: npm error code EEXIST
+Line 28: npm error syscall mkdir
+Line 29: npm error path /dev/null
+Line 30: npm error errno -17
+Line 31: npm error EEXIST: file already exists, mkdir '/dev/null'
+Line 32: npm error File exists: /dev/null
+Line 33: npm error Remove the existing file and try again, or run npm
+Line 34: npm error with --force to overwrite files recklessly.
+Line 35: npm error A complete log of this run can be found in: /opt/buildhome/.npm/_logs/2025-06-12T12_55_17_185Z-debug-0.log
+Line 36: Error during npm install
+Line 37: Failing build: Failed to install dependencies
+Line 38: Finished processing build request in 7.913s
