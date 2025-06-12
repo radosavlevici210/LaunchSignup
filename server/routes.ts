@@ -10,15 +10,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const signupData = insertWaitlistSignupSchema.parse(req.body);
       
+      // Enhanced validation
+      if (!signupData.fullName || signupData.fullName.trim().length < 2) {
+        return res.status(400).json({ 
+          message: "Full name must be at least 2 characters long" 
+        });
+      }
+      
+      if (!signupData.email || !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(signupData.email)) {
+        return res.status(400).json({ 
+          message: "Please enter a valid email address" 
+        });
+      }
+      
+      // Sanitize input
+      const sanitizedData = {
+        fullName: signupData.fullName.trim(),
+        email: signupData.email.toLowerCase().trim()
+      };
+      
       // Check if email already exists
-      const existingSignup = await storage.getWaitlistSignupByEmail(signupData.email);
+      const existingSignup = await storage.getWaitlistSignupByEmail(sanitizedData.email);
       if (existingSignup) {
         return res.status(400).json({ 
           message: "Email address is already registered in our waitlist" 
         });
       }
       
-      const signup = await storage.createWaitlistSignup(signupData);
+      const signup = await storage.createWaitlistSignup(sanitizedData);
       res.status(201).json({ 
         message: "Successfully joined the waitlist!",
         signup: {
@@ -31,8 +50,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({ 
-          message: "Invalid input data",
-          errors: error.errors 
+          message: "Please check your input and try again",
+          errors: error.errors.map(e => e.message)
         });
       }
       console.error("Waitlist signup error:", error);
