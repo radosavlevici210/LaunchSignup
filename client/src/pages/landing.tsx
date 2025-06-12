@@ -151,17 +151,70 @@ export default function Landing() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-card border-t border-border py-8">
+      <footer className="bg-card border-t border-border py-12">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center space-x-3 mb-4 md:mb-0">
-              <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
-                <Rocket className="h-4 w-4 text-white" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Company Info */}
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
+                  <Rocket className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-lg font-bold text-foreground">InnovateLab</span>
               </div>
-              <span className="text-lg font-bold text-foreground">InnovateLab</span>
+              <p className="text-sm text-muted-foreground">
+                Revolutionizing innovation with cutting-edge technology solutions for forward-thinking professionals.
+              </p>
+              <div className="text-xs text-muted-foreground">
+                <p>Founded: 2025</p>
+                <p>Owner: Ervin Radosavlevici</p>
+                <p>Contact: ervin210@icloud.com</p>
+              </div>
             </div>
-            <div className="text-sm text-muted-foreground">
-              © {new Date().getFullYear()} InnovateLab. All rights reserved. • Built with passion by our team
+            
+            {/* Quick Links */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Quick Links</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#features" className="hover:text-primary transition-colors">Features</a></li>
+                <li><a href="#pricing" className="hover:text-primary transition-colors">Pricing</a></li>
+                <li><a href="#about" className="hover:text-primary transition-colors">About Us</a></li>
+                <li><a href="#contact" className="hover:text-primary transition-colors">Contact</a></li>
+              </ul>
+            </div>
+            
+            {/* Legal & Timestamp */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider">Legal</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li><a href="#privacy" className="hover:text-primary transition-colors">Privacy Policy</a></li>
+                <li><a href="#terms" className="hover:text-primary transition-colors">Terms of Service</a></li>
+                <li><a href="#cookies" className="hover:text-primary transition-colors">Cookie Policy</a></li>
+              </ul>
+              <div className="text-xs text-muted-foreground mt-4 p-3 bg-muted/30 rounded-lg">
+                <p className="font-medium text-foreground mb-1">Timestamp Information</p>
+                <p>Created: {new Date().toLocaleDateString('en-US', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}</p>
+                <p>Last Updated: {new Date().toISOString()}</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Copyright Bar */}
+          <div className="border-t border-border mt-8 pt-6">
+            <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+              <div className="text-sm text-muted-foreground">
+                © {new Date().getFullYear()} InnovateLab. All rights reserved. 
+                <span className="ml-2">Developed by Ervin Radosavlevici</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Version 1.0.0 • Built with React & PostgreSQL • Production Ready
+              </div>
             </div>
           </div>
         </div>
