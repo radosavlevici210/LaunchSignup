@@ -1,0 +1,96 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Studio - Knowledge & YouTube Learning Mode</title>
+  <style>
+    body {
+      background-color: #121212;
+      color: #eee;
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      max-width: 900px;
+      margin: auto;
+    }
+    h1, h2 {
+      color: #00ff88;
+    }
+    textarea, input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 6px;
+      border: none;
+      font-size: 1rem;
+    }
+    button {
+      background: #00ff88;
+      color: #000;
+      font-weight: bold;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    button:hover {
+      background: #00cc66;
+    }
+    .output {
+      background: #1e1e1e;
+      border-left: 4px solid #00ff88;
+      padding: 15px;
+      border-radius: 6px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🎓 AI Studio - Learn From YouTube, Lyrics, & History</h1>
+
+<h2>📺 Learn from YouTube Video</h2>
+<input type="text" id="youtube-url" placeholder="Paste YouTube video URL here" />
+<button onclick="analyzeYouTube()">Analyze YouTube</button>
+
+<h2>🎤 Analyze Lyrics or Script</h2>
+<textarea id="lyrics-input" rows="6" placeholder="Paste lyrics, dialogue, or script here..."></textarea>
+<button onclick="analyzeLyrics()">Analyze Lyrics</button>
+
+<h2>🧠 Load Chat History & AI Knowledge</h2>
+<button onclick="loadHistory()">Load Development History</button>
+
+<div id="output" class="output">
+  <p>Output and creative suggestions will appear here...</p>
+</div>
+
+<script>
+function analyzeYouTube() {
+  const url = document.getElementById('youtube-url').value;
+  document.getElementById('output').innerHTML = `<p>🔍 Analyzing YouTube video at <b>${url}</b>...<br>🎬 Extracting mood, genre, pacing, and tone (demo)...</p>`;
+}
+
+function analyzeLyrics() {
+  const lyrics = document.getElementById('lyrics-input').value;
+  document.getElementById('output').innerHTML = `<p>📖 Analyzing lyrics:<br><i>${lyrics}</i><br><br>🎵 Detected rhyme style, theme, emotion and beat pattern (demo).</p>`;
+}
+
+function loadHistory() {
+  document.getElementById('output').innerHTML = `
+    <p>📜 Full chat history, features, and production tools loaded.<br>
+    🧠 AI Knowledge includes:
+    <ul>
+      <li>Royalty wallet integration</li>
+      <li>Media playback & generation</li>
+      <li>Deployment tools (GitHub/Netlify)</li>
+      <li>Copyright protection</li>
+      <li>Best practices from movies, music, and production</li>
+    </ul>
+    ✅ Now ready to generate content based on all past developments.</p>`;
+}
+</script>
+
+</body>
+</html>

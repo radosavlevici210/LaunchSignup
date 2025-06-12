@@ -1,0 +1,103 @@
+
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Movie &amp; Music Studio - READY PRODUCTION</title>
+<style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #eee;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #00ff88;
+    }
+    button {
+      background: #00ff88;
+      color: #000;
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #00cc66;
+    }
+    .output {
+      margin-top: 20px;
+      border: 1px solid #00ff88;
+      padding: 20px;
+      border-radius: 10px;
+      background: #222;
+    }
+    video, audio {
+      margin-top: 15px;
+      width: 80%;
+      max-width: 600px;
+    }
+  </style>
+</head>
+<body>
+<h1>🎬 AI Movie &amp; Music Studio</h1>
+<p>Fast, Offline, Fully Working Production Demo</p>
+<button onclick="playVideo()">▶ Create Movie</button>
+<button onclick="playAudio()">🎵 Create Album</button>
+<div class="output" id="output">
+<p>Output will appear here...</p>
+</div>
+<script>
+    function playVideo() {
+      document.getElementById('output').innerHTML = \`
+        <h3>Enhanced Movie Output</h3>
+        <video controls>
+          <source src="media/sample-video.mp4" type="video/mp4">
+          Your browser does not support video.
+        </video>
+      \`;
+    }
+
+    function playAudio() {
+      document.getElementById('output').innerHTML = \`
+        <h3>Enhanced Music Output</h3>
+        <audio controls>
+          <source src="media/sample-audio.mp3" type="audio/mpeg">
+          Your browser does not support audio.
+        </audio>
+      \`;
+    }
+  </script>
+<h1>🎓 AI Studio - Learn From YouTube, Lyrics, &amp; History</h1><h2>📺 Learn from YouTube Video</h2><input id="youtube-url" placeholder="Paste YouTube video URL here" type="text"/><button onclick="analyzeYouTube()">Analyze YouTube</button><h2>🎤 Analyze Lyrics or Script</h2><textarea id="lyrics-input" placeholder="Paste lyrics, dialogue, or script here..." rows="6"></textarea><button onclick="analyzeLyrics()">Analyze Lyrics</button><h2>🧠 Load Chat History &amp; AI Knowledge</h2><button onclick="loadHistory()">Load Development History</button><div class="output" id="output">
+<p>Output and creative suggestions will appear here...</p>
+</div><script>
+function analyzeYouTube() {
+  const url = document.getElementById('youtube-url').value;
+  document.getElementById('output').innerHTML = `<p>🔍 Analyzing YouTube video at <b>${url}</b>...<br>🎬 Extracting mood, genre, pacing, and tone (demo)...</p>`;
+}
+
+function analyzeLyrics() {
+  const lyrics = document.getElementById('lyrics-input').value;
+  document.getElementById('output').innerHTML = `<p>📖 Analyzing lyrics:<br><i>${lyrics}</i><br><br>🎵 Detected rhyme style, theme, emotion and beat pattern (demo).</p>`;
+}
+
+function loadHistory() {
+  document.getElementById('output').innerHTML = `
+    <p>📜 Full chat history, features, and production tools loaded.<br>
+    🧠 AI Knowledge includes:
+    <ul>
+      <li>Royalty wallet integration</li>
+      <li>Media playback & generation</li>
+      <li>Deployment tools (GitHub/Netlify)</li>
+      <li>Copyright protection</li>
+      <li>Best practices from movies, music, and production</li>
+    </ul>
+    ✅ Now ready to generate content based on all past developments.</p>`;
+}
+</script></body>
+</html>
