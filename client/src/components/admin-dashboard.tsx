@@ -43,7 +43,26 @@ export default function AdminDashboard() {
 
   const updateSignupMutation = useMutation({
     mutationFn: async ({ id, updates }: { id: number; updates: any }) => {
-      return await apiRequest(`/api/waitlist/${id}`, "PATCH", updates);
+      const token = localStorage.getItem('admin_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`/api/waitlist/${id}`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify(updates),
+      });
+      
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Request failed');
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/waitlist"] });

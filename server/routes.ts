@@ -218,13 +218,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       if (email === "ervin210@icloud.com") {
+        // Generate a simple token (in production, use JWT or similar)
+        const token = Buffer.from(`${email}:${Date.now()}`).toString('base64');
+        
         res.json({ 
           message: "Admin access granted",
-          authenticated: true 
+          authenticated: true,
+          token: token
         });
       } else {
         res.status(401).json({ 
           message: "Access denied. Only root user can access admin dashboard.",
+          authenticated: false 
+        });
+      }
+    } catch (error) {
+      handleError(error, res);
+    }
+  });
+
+  // Admin token verification endpoint
+  app.post("/api/admin/verify", rateLimit(20, 60 * 1000), async (req, res) => {
+    try {
+      const { token } = req.body;
+      
+      if (!token || typeof token !== 'string') {
+        return res.status(400).json({ message: "Token is required" });
+      }
+      
+      try {
+        const decoded = Buffer.from(token, 'base64').toString('utf-8');
+        const [email, timestamp] = decoded.split(':');
+        
+        // Check if token is valid and not expired (24 hours)
+        const tokenAge = Date.now() - parseInt(timestamp);
+        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+        
+        if (email === "ervin210@icloud.com" && tokenAge < maxAge) {
+          res.json({ 
+            message: "Token valid",
+            authenticated: true 
+          });
+        } else {
+          res.status(401).json({ 
+            message: "Invalid or expired token",
+            authenticated: false 
+          });
+        }
+      } catch (decodeError) {
+        res.status(401).json({ 
+          message: "Invalid token format",
           authenticated: false 
         });
       }
