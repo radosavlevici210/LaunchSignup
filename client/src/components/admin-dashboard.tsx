@@ -258,23 +258,75 @@ export default function AdminDashboard() {
         </Card>
       </div>
 
-      {/* Signups Table */}
+      {/* Enhanced Signups Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-semibold">Recent Signups</CardTitle>
+          <div className="flex justify-between items-center">
+            <CardTitle className="text-lg font-semibold">Waitlist Signups</CardTitle>
+            <div className="flex items-center gap-4">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-40">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="verified">Verified</SelectItem>
+                  <SelectItem value="invited">Invited</SelectItem>
+                  <SelectItem value="declined">Declined</SelectItem>
+                </SelectContent>
+              </Select>
+              {selectedSignups.length > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    {selectedSignups.length} selected
+                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() => bulkUpdateMutation.mutate({
+                      signupIds: selectedSignups,
+                      updates: { status: "invited" }
+                    })}
+                    disabled={bulkUpdateMutation.isPending}
+                  >
+                    Mark as Invited
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {signups.length === 0 ? (
             <div className="text-center py-12">
               <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold text-foreground mb-2">No signups yet</h3>
-              <p className="text-muted-foreground">Waitlist signups will appear here when users join.</p>
+              <h3 className="text-lg font-semibold text-foreground mb-2">No signups found</h3>
+              <p className="text-muted-foreground">
+                {statusFilter !== "all" 
+                  ? `No signups with ${statusFilter} status found.`
+                  : "Waitlist signups will appear here when users join."
+                }
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
+                    <th className="px-4 py-3 text-left">
+                      <input
+                        type="checkbox"
+                        checked={selectedSignups.length === signups.length && signups.length > 0}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSignups(signups.map(s => s.id));
+                          } else {
+                            setSelectedSignups([]);
+                          }
+                        }}
+                        className="rounded border-gray-300"
+                      />
+                    </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Name
                     </th>
@@ -282,21 +334,56 @@ export default function AdminDashboard() {
                       Email
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                      Priority
+                    </th>
+                    <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
                       Date
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                      Status
+                      Actions
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {signups.map((signup) => (
-                    <tr key={signup.id}>
+                    <tr key={signup.id} className="hover:bg-muted/50">
+                      <td className="px-4 py-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedSignups.includes(signup.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedSignups([...selectedSignups, signup.id]);
+                            } else {
+                              setSelectedSignups(selectedSignups.filter(id => id !== signup.id));
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                      </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="text-sm font-medium text-foreground">{signup.fullName}</div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="text-sm text-muted-foreground">{signup.email}</div>
+                        {signup.emailVerified && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <CheckCircle className="h-3 w-3 text-green-600" />
+                            <span className="text-xs text-green-600">Verified</span>
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <Badge className={`flex items-center gap-1 ${getStatusColor(signup.status)}`}>
+                          {getStatusIcon(signup.status)}
+                          {signup.status}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span className="text-sm text-muted-foreground">{signup.priority || 0}</span>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
                         <div className="text-sm text-muted-foreground">
@@ -304,9 +391,31 @@ export default function AdminDashboard() {
                         </div>
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
-                        <Badge variant="outline" className="bg-success/10 text-success border-success/20">
-                          Active
-                        </Badge>
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => setEditingSignup(signup)}
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>Edit Signup</DialogTitle>
+                            </DialogHeader>
+                            <EditSignupForm
+                              signup={editingSignup}
+                              onUpdate={(updates) => {
+                                if (editingSignup) {
+                                  updateSignupMutation.mutate({ id: editingSignup.id, updates });
+                                }
+                              }}
+                              isLoading={updateSignupMutation.isPending}
+                            />
+                          </DialogContent>
+                        </Dialog>
                       </td>
                     </tr>
                   ))}
@@ -316,6 +425,73 @@ export default function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function EditSignupForm({ 
+  signup, 
+  onUpdate, 
+  isLoading 
+}: { 
+  signup: WaitlistSignup | null; 
+  onUpdate: (updates: any) => void; 
+  isLoading: boolean;
+}) {
+  const [status, setStatus] = useState(signup?.status || "pending");
+  const [priority, setPriority] = useState(signup?.priority?.toString() || "0");
+  const [notes, setNotes] = useState(signup?.notes || "");
+
+  if (!signup) return null;
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="text-sm font-medium">Status</label>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="pending">Pending</SelectItem>
+            <SelectItem value="verified">Verified</SelectItem>
+            <SelectItem value="invited">Invited</SelectItem>
+            <SelectItem value="declined">Declined</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <label className="text-sm font-medium">Priority (0-10)</label>
+        <Input
+          type="number"
+          min="0"
+          max="10"
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+        />
+      </div>
+      
+      <div>
+        <label className="text-sm font-medium">Notes</label>
+        <Textarea
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          placeholder="Add any notes about this signup..."
+        />
+      </div>
+      
+      <Button
+        onClick={() => onUpdate({
+          status,
+          priority: parseInt(priority) || 0,
+          notes: notes.trim() || null
+        })}
+        disabled={isLoading}
+        className="w-full"
+      >
+        {isLoading ? "Updating..." : "Update Signup"}
+      </Button>
     </div>
   );
 }
