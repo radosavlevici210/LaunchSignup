@@ -1,4 +1,3 @@
-
 import { QueryClient } from "@tanstack/react-query";
 
 export const queryClient = new QueryClient({
@@ -22,17 +21,17 @@ export const queryClient = new QueryClient({
 // API base URL - automatically detects environment
 const getApiBaseUrl = () => {
   if (typeof window === 'undefined') return '';
-  
+
   // In production on Netlify
   if (window.location.hostname.includes('netlify.app')) {
-    return window.location.origin;
+    return 'https://cerulean-entremet-0a91fd.netlify.app/.netlify/functions/api';
   }
-  
+
   // In development
   if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
     return 'http://localhost:5000';
   }
-  
+
   // Fallback to current origin
   return window.location.origin;
 };
@@ -44,7 +43,7 @@ export async function apiRequest(
 ) {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${endpoint}`;
-  
+
   const config: RequestInit = {
     method,
     headers: {
@@ -58,7 +57,7 @@ export async function apiRequest(
   }
 
   const response = await fetch(url, config);
-  
+
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({ message: 'Network error' }));
     const error = new Error(errorData.message || `HTTP error! status: ${response.status}`);
