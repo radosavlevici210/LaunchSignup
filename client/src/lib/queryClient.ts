@@ -1,57 +1,70 @@
-import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
-async function throwIfResNotOk(res: Response) {
-  if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
-  }
-}
-
-export async function apiRequest(
-  method: string,
-  url: string,
-  data?: unknown | undefined,
-): Promise<Response> {
-  const res = await fetch(url, {
-    method,
-    headers: data ? { "Content-Type": "application/json" } : {},
-    body: data ? JSON.stringify(data) : undefined,
-    credentials: "include",
-  });
-
-  await throwIfResNotOk(res);
-  return res;
-}
-
-type UnauthorizedBehavior = "returnNull" | "throw";
-export const getQueryFn: <T>(options: {
-  on401: UnauthorizedBehavior;
-}) => QueryFunction<T> =
-  ({ on401: unauthorizedBehavior }) =>
-  async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
-      credentials: "include",
-    });
-
-    if (unauthorizedBehavior === "returnNull" && res.status === 401) {
-      return null;
-    }
-
-    await throwIfResNotOk(res);
-    return await res.json();
-  };
+import { QueryClient } from "@tanstack/react-query";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      queryFn: getQueryFn({ on401: "throw" }),
-      refetchInterval: false,
-      refetchOnWindowFocus: false,
-      staleTime: Infinity,
-      retry: false,
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: (failureCount, error: any) => {
+        // Don't retry on 4xx errors
+        if (error?.status >= 400 && error?.status < 500) {
+          return false;
+        }
+        return failureCount < 3;
+      },
     },
     mutations: {
       retry: false,
     },
   },
 });
+
+// API base URL - automatically detects environment
+const getApiBaseUrl = () => {
+  if (typeof window === 'undefined') return '';
+  
+  // In production on Netlify
+  if (window.location.hostname.includes('netlify.app')) {
+    return window.location.origin;
+  }
+  
+  // In development
+  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    return 'http://localhost:5000';
+  }
+  
+  // Fallback to current origin
+  return window.location.origin;
+};
+
+export async function apiRequest(
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH',
+  endpoint: string,
+  body?: any
+) {
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${endpoint}`;
+  
+  const config: RequestInit = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    credentials: 'include',
+  };
+
+  if (body) {
+    config.body = JSON.stringify(body);
+  }
+
+  const response = await fetch(url, config);
+  
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: 'Network error' }));
+    const error = new Error(errorData.message || `HTTP error! status: ${response.status}`);
+    (error as any).status = response.status;
+    throw error;
+  }
+
+  return response;
+}

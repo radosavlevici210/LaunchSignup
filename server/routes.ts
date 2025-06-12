@@ -217,9 +217,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Email is required" });
       }
       
-      if (email === "ervin210@icloud.com") {
-        // Generate a simple token (in production, use JWT or similar)
-        const token = Buffer.from(`${email}:${Date.now()}`).toString('base64');
+      const adminEmail = process.env.ADMIN_EMAIL || "ervin210@icloud.com";
+      
+      if (email.toLowerCase() === adminEmail.toLowerCase()) {
+        // Generate a secure token with timestamp and random component
+        const timestamp = Date.now();
+        const randomComponent = Math.random().toString(36).substring(2);
+        const tokenData = `${email}:${timestamp}:${randomComponent}`;
+        const token = Buffer.from(tokenData).toString('base64');
         
         res.json({ 
           message: "Admin access granted",
@@ -228,7 +233,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       } else {
         res.status(401).json({ 
-          message: "Access denied. Only root user can access admin dashboard.",
+          message: "Access denied. Only authorized admin can access dashboard.",
           authenticated: false 
         });
       }
@@ -248,13 +253,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         const decoded = Buffer.from(token, 'base64').toString('utf-8');
-        const [email, timestamp] = decoded.split(':');
+        const parts = decoded.split(':');
+        
+        if (parts.length !== 3) {
+          throw new Error('Invalid token format');
+        }
+        
+        const [email, timestamp, randomComponent] = parts;
+        const adminEmail = process.env.ADMIN_EMAIL || "ervin210@icloud.com";
         
         // Check if token is valid and not expired (24 hours)
         const tokenAge = Date.now() - parseInt(timestamp);
         const maxAge = 24 * 60 * 60 * 1000; // 24 hours
         
-        if (email === "ervin210@icloud.com" && tokenAge < maxAge) {
+        if (email.toLowerCase() === adminEmail.toLowerCase() && tokenAge < maxAge && randomComponent) {
           res.json({ 
             message: "Token valid",
             authenticated: true 

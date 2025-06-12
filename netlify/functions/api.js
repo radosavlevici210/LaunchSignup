@@ -1,32 +1,40 @@
-import { Handler } from '@netlify/functions'
 
-const handler = async (event, context) => {
-  // Handle CORS preflight requests
-  if (event.httpMethod === 'OPTIONS') {
-    return {
-      statusCode: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE',
-      },
-      body: '',
-    }
-  }
+const express = require('express');
+const serverless = require('serverless-http');
+const cors = require('cors');
 
-  // For now, return a simple message - this would be replaced with actual API logic
-  return {
-    statusCode: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      message: 'API endpoint is working',
-      path: event.path,
-      method: event.httpMethod,
-    }),
-  }
-}
+// Import your Express app setup
+const { registerRoutes } = require('../../server/routes');
 
-export { handler }
+const app = express();
+
+// Middleware
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? ['https://cerulean-entremet-0a91fd.netlify.app'] 
+    : ['http://localhost:5000', 'http://localhost:3000'],
+  credentials: true
+}));
+
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Trust proxy for rate limiting
+app.set('trust proxy', 1);
+
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'production'
+  });
+});
+
+// Register API routes
+registerRoutes(app).then(() => {
+  console.log('API routes registered successfully');
+}).catch(console.error);
+
+// Export the serverless function
+module.exports.handler = serverless(app);
