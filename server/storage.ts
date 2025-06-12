@@ -166,42 +166,88 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async getAllWaitlistSignups(): Promise<WaitlistSignup[]> {
-    return await db.select().from(waitlistSignups).orderBy(desc(waitlistSignups.timestamp));
+  async getAllWaitlistSignups(status?: string): Promise<WaitlistSignup[]> {
+    try {
+      let query = db.select().from(waitlistSignups);
+      if (status) {
+        query = query.where(eq(waitlistSignups.status, status));
+      }
+      return await query.orderBy(desc(waitlistSignups.timestamp));
+    } catch (error) {
+      throw new StorageError(`Failed to get waitlist signups: ${error}`, 'WAITLIST_GET_ERROR');
+    }
   }
 
   async getWaitlistStats(): Promise<{
     totalSignups: number;
     todaySignups: number;
     weeklyGrowth: number;
+    verifiedCount: number;
+    pendingCount: number;
+    invitedCount: number;
   }> {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
+    try {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const twoWeeksAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
 
-    const [totalResult] = await db.select({ count: count() }).from(waitlistSignups);
-    const [todayResult] = await db.select({ count: count() }).from(waitlistSignups)
-      .where(gte(waitlistSignups.timestamp, today));
-    const [thisWeekResult] = await db.select({ count: count() }).from(waitlistSignups)
-      .where(gte(waitlistSignups.timestamp, weekAgo));
-    const [lastWeekResult] = await db.select({ count: count() }).from(waitlistSignups)
-      .where(gte(waitlistSignups.timestamp, twoWeeksAgo));
+      const [totalResult] = await db.select({ count: count() }).from(waitlistSignups);
+      const [todayResult] = await db.select({ count: count() }).from(waitlistSignups)
+        .where(gte(waitlistSignups.timestamp, today));
+      const [thisWeekResult] = await db.select({ count: count() }).from(waitlistSignups)
+        .where(gte(waitlistSignups.timestamp, weekAgo));
+      const [lastWeekResult] = await db.select({ count: count() }).from(waitlistSignups)
+        .where(gte(waitlistSignups.timestamp, twoWeeksAgo));
+      
+      const [verifiedResult] = await db.select({ count: count() }).from(waitlistSignups)
+        .where(eq(waitlistSignups.status, 'verified'));
+      const [pendingResult] = await db.select({ count: count() }).from(waitlistSignups)
+        .where(eq(waitlistSignups.status, 'pending'));
+      const [invitedResult] = await db.select({ count: count() }).from(waitlistSignups)
+        .where(eq(waitlistSignups.status, 'invited'));
 
-    const totalSignups = totalResult.count;
-    const todaySignups = todayResult.count;
-    const thisWeekSignups = thisWeekResult.count;
-    const lastWeekSignups = lastWeekResult.count - thisWeekSignups;
+      const totalSignups = totalResult.count;
+      const todaySignups = todayResult.count;
+      const thisWeekSignups = thisWeekResult.count;
+      const lastWeekSignups = lastWeekResult.count - thisWeekSignups;
 
-    const weeklyGrowth = lastWeekSignups > 0 
-      ? Math.round(((thisWeekSignups - lastWeekSignups) / lastWeekSignups) * 100)
-      : thisWeekSignups > 0 ? 100 : 0;
+      const weeklyGrowth = lastWeekSignups > 0 
+        ? Math.round(((thisWeekSignups - lastWeekSignups) / lastWeekSignups) * 100)
+        : thisWeekSignups > 0 ? 100 : 0;
 
-    return {
-      totalSignups,
-      todaySignups,
-      weeklyGrowth
-    };
+      return {
+        totalSignups,
+        todaySignups,
+        weeklyGrowth,
+        verifiedCount: verifiedResult.count,
+        pendingCount: pendingResult.count,
+        invitedCount: invitedResult.count,
+      };
+    } catch (error) {
+      throw new StorageError(`Failed to get waitlist stats: ${error}`, 'STATS_GET_ERROR');
+    }
+  }
+
+  async exportWaitlistData(): Promise<WaitlistSignup[]> {
+    try {
+      return await db.select().from(waitlistSignups).orderBy(desc(waitlistSignups.timestamp));
+    } catch (error) {
+      throw new StorageError(`Failed to export waitlist data: ${error}`, 'EXPORT_ERROR');
+    }
+  }
+
+  async bulkUpdateSignups(signupIds: number[], updates: Partial<UpdateWaitlistSignup>): Promise<void> {
+    try {
+      if (signupIds.length === 0) return;
+      
+      await db
+        .update(waitlistSignups)
+        .set(updates)
+        .where(or(...signupIds.map(id => eq(waitlistSignups.id, id))));
+    } catch (error) {
+      throw new StorageError(`Failed to bulk update signups: ${error}`, 'BULK_UPDATE_ERROR');
+    }
   }
 }
 
