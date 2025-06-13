@@ -9,6 +9,8 @@ import ErrorBoundary from "./components/error-boundary";
 import SecurityHeaders from "./components/security-headers";
 import PerformanceMonitor from "./components/performance-monitor";
 import AnalyticsTracker from "./components/analytics-tracker";
+import ErrorMonitoring from "./components/error-monitoring";
+import ServiceWorker from "./components/service-worker";
 
 function Router() {
   return (
@@ -25,7 +27,9 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <SecurityHeaders />
+          <ErrorMonitoring />
           <AnalyticsTracker />
+          <ServiceWorker />
           <Toaster />
           <Router />
           <PerformanceMonitor />
