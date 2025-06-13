@@ -65,19 +65,28 @@ export default function WaitlistForm({ onSuccess }: WaitlistFormProps) {
   const signupMutation = useMutation({
     mutationFn: async (data: WaitlistFormData) => {
       const response = await apiRequest("POST", "/api/waitlist", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
       return response.json();
     },
     onSuccess: (data, variables) => {
       toast({
-        title: "Success!",
-        description: data.message || "Successfully joined the waitlist!",
+        title: "Welcome to the waitlist!",
+        description: data.message || "You'll receive email updates about our launch progress.",
       });
+      form.reset();
+      setSelectedInterests([]);
       onSuccess(variables);
     },
     onError: (error: any) => {
+      console.error('Waitlist signup error:', error);
+      const errorMessage = error.message || "Network error. Please check your connection and try again.";
+      
       toast({
-        title: "Error",
-        description: error.message || "Failed to join waitlist. Please try again.",
+        title: "Unable to join waitlist",
+        description: errorMessage,
         variant: "destructive",
       });
     },
