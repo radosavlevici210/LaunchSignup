@@ -23,17 +23,20 @@ const getApiBaseUrl = () => {
   if (typeof window === 'undefined') return '';
 
   // In production on Netlify
-  if (window.location.hostname.includes('netlify.app')) {
-    return 'https://cerulean-entremet-0a91fd.netlify.app/.netlify/functions/api';
+  if (window.location.hostname.includes('netlify.app') || 
+      window.location.hostname.includes('replit.app')) {
+    return `${window.location.origin}/.netlify/functions/api`;
   }
 
   // In development
-  if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-    return 'http://localhost:5000';
+  if (window.location.hostname === 'localhost' || 
+      window.location.hostname === '127.0.0.1' ||
+      window.location.hostname === '0.0.0.0') {
+    return 'http://localhost:5000/api';
   }
 
-  // Fallback to current origin
-  return window.location.origin;
+  // Custom domain fallback
+  return `${window.location.origin}/.netlify/functions/api`;
 };
 
 export async function apiRequest(

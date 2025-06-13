@@ -33,12 +33,36 @@ export default function AdminDashboard() {
   const queryClient = useQueryClient();
 
   const { data, isLoading, error } = useQuery<WaitlistResponse>({
-    queryKey: ["/api/waitlist", statusFilter],
+    queryKey: ["/api/admin/waitlist", statusFilter],
     queryFn: async () => {
+      const token = localStorage.getItem('admin_token');
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
       const params = statusFilter !== "all" ? `?status=${statusFilter}` : "";
-      return await fetch(`/api/waitlist${params}`).then(res => res.json());
+      const response = await fetch(`/api/admin/waitlist${params}`, { headers });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          localStorage.removeItem('admin_token');
+          throw new Error('Authentication required');
+        }
+        throw new Error(`Failed to fetch data: ${response.statusText}`);
+      }
+      
+      return response.json();
     },
     refetchInterval: 30000,
+    retry: (failureCount, error: any) => {
+      if (error.message?.includes('Authentication required')) {
+        return false;
+      }
+      return failureCount < 3;
+    },
   });
 
   const updateSignupMutation = useMutation({
@@ -80,7 +104,7 @@ export default function AdminDashboard() {
 
   const bulkUpdateMutation = useMutation({
     mutationFn: async ({ signupIds, updates }: { signupIds: number[]; updates: any }) => {
-      return await apiRequest("/api/waitlist/bulk-update", "POST", { signupIds, updates });
+      return await apiRequest("POST", "/api/waitlist/bulk-update", { signupIds, updates });
     },
     onSuccess: (_, { signupIds }) => {
       queryClient.invalidateQueries({ queryKey: ["/api/waitlist"] });
