@@ -3,6 +3,13 @@ import { createServer, type Server } from "http";
 import { storage, StorageError } from "./storage";
 import { insertWaitlistSignupSchema, updateWaitlistSignupSchema, emailVerificationSchema } from "@shared/schema";
 import { z } from "zod";
+import { 
+  IMMUTABLE_OWNER, 
+  authenticateUser, 
+  verifySecureToken, 
+  isOwnerEmail,
+  createSecureUser 
+} from "./auth";
 
 // Rate limiting store
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
@@ -69,6 +76,14 @@ function handleError(error: any, res: Response) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Add copyright protection to all responses
+  app.use((req, res, next) => {
+    res.setHeader('X-Copyright-Owner', 'Ervin Remus Radosavlevici');
+    res.setHeader('X-Copyright-Email', 'ervin210@icloud.com');
+    res.setHeader('X-Protection-Level', 'QUANTUM-READY-IMMUTABLE');
+    res.setHeader('X-All-Rights-Reserved', '© 2025 Ervin Remus Radosavlevici');
+    next();
+  });
   // Waitlist signup endpoint with rate limiting
   app.post("/api/waitlist", rateLimit(5, 15 * 60 * 1000), async (req, res) => {
     try {
@@ -208,79 +223,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Admin authentication endpoint
+  // Quantum-ready authentication endpoint
   app.post("/api/admin/auth", rateLimit(5, 15 * 60 * 1000), async (req, res) => {
     try {
-      const { email } = req.body;
+      const { email, password } = req.body;
       
-      if (!email || typeof email !== 'string') {
-        return res.status(400).json({ message: "Email is required" });
+      if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+        return res.status(400).json({ 
+          message: "Email and password are required",
+          owner: IMMUTABLE_OWNER.name,
+          copyright: IMMUTABLE_OWNER.copyright
+        });
       }
       
-      const adminEmail = process.env.ADMIN_EMAIL || "ervin210@icloud.com";
-      
-      if (email.toLowerCase() === adminEmail.toLowerCase()) {
-        // Generate a secure token with timestamp and random component
-        const timestamp = Date.now();
-        const randomComponent = Math.random().toString(36).substring(2);
-        const tokenData = `${email}:${timestamp}:${randomComponent}`;
-        const token = Buffer.from(tokenData).toString('base64');
-        
-        res.json({ 
-          message: "Admin access granted",
-          authenticated: true,
-          token: token
-        });
-      } else {
-        res.status(401).json({ 
-          message: "Access denied. Only authorized admin can access dashboard.",
+      if (!isOwnerEmail(email)) {
+        return res.status(401).json({ 
+          message: "Access denied. Only the copyright owner can access this system.",
+          owner: IMMUTABLE_OWNER.name,
+          authorizedEmails: "ervin210@icloud.com, radosavlevici210@gmail.com",
           authenticated: false 
         });
       }
+      
+      const { user, token } = await authenticateUser(email, password);
+      
+      res.json({ 
+        message: "Quantum-secure access granted",
+        authenticated: true,
+        token: token,
+        user: {
+          email: user.email,
+          isOwner: user.isOwner,
+          quantumProtected: user.quantumProtected
+        },
+        owner: IMMUTABLE_OWNER.name,
+        copyright: IMMUTABLE_OWNER.copyright
+      });
     } catch (error) {
+      if (error.message.includes('Access denied') || error.message.includes('Unauthorized')) {
+        return res.status(401).json({ 
+          message: error.message,
+          owner: IMMUTABLE_OWNER.name,
+          authenticated: false 
+        });
+      }
       handleError(error, res);
     }
   });
 
-  // Admin token verification endpoint
+  // Quantum-ready token verification endpoint
   app.post("/api/admin/verify", rateLimit(20, 60 * 1000), async (req, res) => {
     try {
       const { token } = req.body;
       
       if (!token || typeof token !== 'string') {
-        return res.status(400).json({ message: "Token is required" });
+        return res.status(400).json({ 
+          message: "Token is required",
+          owner: IMMUTABLE_OWNER.name
+        });
       }
       
       try {
-        const decoded = Buffer.from(token, 'base64').toString('utf-8');
-        const parts = decoded.split(':');
+        const decoded = verifySecureToken(token);
         
-        if (parts.length !== 3) {
-          throw new Error('Invalid token format');
-        }
-        
-        const [email, timestamp, randomComponent] = parts;
-        const adminEmail = process.env.ADMIN_EMAIL || "ervin210@icloud.com";
-        
-        // Check if token is valid and not expired (24 hours)
-        const tokenAge = Date.now() - parseInt(timestamp);
-        const maxAge = 24 * 60 * 60 * 1000; // 24 hours
-        
-        if (email.toLowerCase() === adminEmail.toLowerCase() && tokenAge < maxAge && randomComponent) {
-          res.json({ 
-            message: "Token valid",
-            authenticated: true 
-          });
-        } else {
-          res.status(401).json({ 
-            message: "Invalid or expired token",
-            authenticated: false 
+        if (!isOwnerEmail(decoded.email)) {
+          return res.status(401).json({ 
+            message: "Unauthorized: Token not issued to owner",
+            authenticated: false,
+            owner: IMMUTABLE_OWNER.name
           });
         }
-      } catch (decodeError) {
+        
+        res.json({ 
+          message: "Quantum-secure token valid",
+          authenticated: true,
+          user: {
+            email: decoded.email,
+            quantumProtected: decoded.quantum,
+            owner: decoded.owner
+          },
+          copyright: IMMUTABLE_OWNER.copyright
+        });
+      } catch (tokenError) {
         res.status(401).json({ 
-          message: "Invalid token format",
-          authenticated: false 
+          message: "Invalid or expired quantum token",
+          authenticated: false,
+          owner: IMMUTABLE_OWNER.name
         });
       }
     } catch (error) {
