@@ -6,6 +6,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import Landing from "@/pages/landing";
 import Admin from "@/pages/admin";
 import ErrorBoundary from "./components/error-boundary";
+import SecurityHeaders from "./components/security-headers";
+import PerformanceMonitor from "./components/performance-monitor";
+import AnalyticsTracker from "./components/analytics-tracker";
 
 function Router() {
   return (
@@ -21,8 +24,11 @@ function App() {
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
+          <SecurityHeaders />
+          <AnalyticsTracker />
           <Toaster />
           <Router />
+          <PerformanceMonitor />
         </TooltipProvider>
       </QueryClientProvider>
     </ErrorBoundary>

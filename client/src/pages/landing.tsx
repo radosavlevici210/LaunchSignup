@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Rocket, CloudLightning, Shield, Users } from "lucide-react";
 import WaitlistForm from "@/components/waitlist-form";
+import SEOMeta from "@/components/seo-meta";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -21,6 +22,10 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOMeta 
+        title="Join the AI Revolution - InnovateLab Waitlist"
+        description="Be among the first to experience our revolutionary AI-powered platform. Join thousands of innovators already on our exclusive waitlist."
+      />
       {/* Navigation */}
       <nav className="bg-card border-b border-border sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
